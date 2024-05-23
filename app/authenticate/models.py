@@ -1,10 +1,9 @@
 """Mixin - A Addtional class to expand base class functionality"""
 
-
 import jwt
 
 from datetime import datetime, timedelta
-
+from django.utils.translation import gettext as _
 from django.conf import settings  # Importing Django settings
 from django.contrib.auth.models import (
 	AbstractBaseUser,
@@ -20,6 +19,7 @@ class UserManager(BaseUserManager):
 	UserManager is a required class for User model.
 	Needed for managing User objects.
 	"""
+
 	def create_user(self, username, email, password=None):
 		"""Creating a usual user without additonal permissions."""
 		if username is None:
@@ -50,11 +50,12 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
 	username = models.CharField(db_index=True, max_length=255, unique=True)
 	email = models.EmailField(db_index=True, unique=True)
-	is_active = models.BooleanField(default=True)
+	is_active = models.BooleanField(default=False)
 	is_staff = models.BooleanField(default=False)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
 	balance = models.IntegerField(default=0)
+	confirmation_otp = models.IntegerField(verbose_name=_("OTP"), null=True, blank=True)
 
 	USERNAME_FIELD = 'email'  # Email instead username in user authentications
 	REQUIRED_FIELDS = ('username',)
@@ -82,8 +83,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 	def append_balance(self, value):
 		self.balance += value
 		return self.balance
-
-
 
 	def _generate_jwt_token(self):
 		"""

@@ -1,17 +1,23 @@
+from django.conf import settings
+from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.exceptions import PermissionDenied
+from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.exceptions import PermissionDenied
+
+
+from .models import User
 from .renderers import UserJSONRenderer
+from .tasks import send_otp_email
 from .serializers import (
 	LoginSerializer,
 	RegistrationSerializer,
-	UserSerializer
+	UserSerializer,
+	OTPSerializer,
 )
 
-from .const import ALLOWED_PARAMS
 
 class RegistrationAPIView(APIView):
 	permission_classes = (AllowAny,)
@@ -19,12 +25,21 @@ class RegistrationAPIView(APIView):
 
 	def post(self, request):
 		user = request.data.get('user', {})
-
 		serializer = self.serializer_class(data=user)
 		serializer.is_valid(raise_exception=True)
-		serializer.save()
+		# Send OTP
+		if "email" not in serializer.data.keys() or "confirmation_otp" not in serializer.data.keys():
+			print(serializer.data.keys())
+			return Response(data="Error. Imposible to send confirmation email try again later",
+			                status=status.HTTP_503_SERVICE_UNAVAILABLE)
+		print(serializer.data.get("email"), serializer.data.get('confirmation_otp'))
+		try:
 
-		return Response(serializer.data, status=status.HTTP_201_CREATED)
+			send_otp_email.delay(serializer.data.get("email"), serializer.data.get('confirmation_otp'))
+		except Exception as e:
+			print(e)
+		# serializer.save()
+		return Response(data="OTP sent", status=status.HTTP_201_CREATED)
 
 
 class LoginAPIView(APIView):
@@ -41,7 +56,7 @@ class LoginAPIView(APIView):
 		return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class UserRetriveUpdateView(RetrieveUpdateAPIView):
+class UserRetriveUpdateView(generics.RetrieveUpdateAPIView):
 	permission_classes = (IsAuthenticated,)
 	renderer_classes = (UserJSONRenderer,)
 	serializer_class = UserSerializer
@@ -65,7 +80,7 @@ class UserRetriveUpdateView(RetrieveUpdateAPIView):
 		return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class UserBalanceView(RetrieveUpdateAPIView):
+class UserBalanceView(generics.RetrieveUpdateAPIView):
 	permission_classes = (IsAuthenticated,)
 	serializer_class = UserSerializer
 
@@ -90,3 +105,23 @@ class UserBalanceView(RetrieveUpdateAPIView):
 		serializer.save()
 
 		return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserConfirmOTPView(generics.GenericAPIView):
+	serializer_class = OTPSerializer
+
+	def post(self, request):
+		serializer = self.get_serializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+		otp = serializer.data['otp']
+		if not settings.TOTP_GENERATOR.verify(otp):
+			return Response(data="OTP expired", status=status.HTTP_401_UNAUTHORIZED)
+
+		user = get_object_or_404(User, confirmation_otp=otp)
+		user.confirmation_otp = None
+		user.is_active = True
+		user.save()
+		return Response({
+			"user": UserSerializer(user, context=self.get_serializer_context()).data,
+			"message": "User confirmed successfully",
+		})
