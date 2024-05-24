@@ -1,8 +1,8 @@
-from pathlib import Path
 import os
-import pyotp
+from pathlib import Path
 
-from .consts import DEBUG, EMAIL_SMTP_CONF, SECONDS_IN_MINUTES
+import pyotp
+from .consts import SECONDS_IN_MINUTE
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -14,8 +14,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = DEBUG
-
+DEBUG = os.environ.get("DEBUG")
+print(os.environ.get("SECONDS_IN_MINUTE"))
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
 
 
@@ -70,15 +70,18 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB'),
+        'USER': os.environ.get('POSTGRES_USER'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+        'HOST': os.environ.get('POSTGRES_HOST'),
+        'PORT': os.environ.get('POSTGRES_PORT'),
     }
 }
 
-
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_SMTP_CONF = EMAIL_SMTP_CONF
+EMAIL_SMTP_CONF = os.environ
 
 EMAIL_HOST = EMAIL_SMTP_CONF.get("EMAIL_HOST")
 EMAIL_PORT = EMAIL_SMTP_CONF.get("EMAIL_PORT")
@@ -87,16 +90,18 @@ EMAIL_USE_SSL = EMAIL_SMTP_CONF.get("EMAIL_USE_SSL")
 EMAIL_HOST_USER = EMAIL_SMTP_CONF.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = EMAIL_SMTP_CONF.get("EMAIL_HOST_PASSWORD")
 
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND = "redis://redis:679/0"
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+CELERY_TASK_TIME_LIMIT = 3600  # Установка времени ожидания задачи в секундах (здесь 1 час)
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 
 
 OTP_EXPIRATION_IN_MINUTES = os.environ.get("OTP_EXPIRATION_IN_MINUTES", 5)
-TOTP_GENERATOR = pyotp.TOTP(pyotp.random_base32(), interval=SECONDS_IN_MINUTES * OTP_EXPIRATION_IN_MINUTES)
+TOTP_GENERATOR = pyotp.TOTP(pyotp.random_base32(),
+                            interval= SECONDS_IN_MINUTE * OTP_EXPIRATION_IN_MINUTES)
 
 
 # Password validation

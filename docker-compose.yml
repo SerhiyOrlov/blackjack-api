@@ -1,12 +1,16 @@
 services:
   redis:
     image: redis:7.0.11-alpine
+    volumes:
+      - 'redis_data:/data'
+
   django:
     container_name: django
     build:
       context: ./app
       dockerfile: Dockerfile
-    command: python manage.py runserver 0.0.0.0:8000
+    command: >
+      sh -c '/wait-for-it.sh postgres:5432 -- python manage.py runserver 0.0.0.0:8000'
     volumes:
      - ./app:/usr/src/app/
     ports:
@@ -15,6 +19,7 @@ services:
       - .env
     depends_on:
       - redis
+      - postgres
 
   celery:
     container_name: email_celery1
@@ -29,3 +34,17 @@ services:
     depends_on:
       - redis
       - django
+
+  postgres:
+    container_name: postgres
+    image: postgres:13
+    env_file:
+     - .env.db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+  redis_data:
