@@ -16,3 +16,4 @@ def send_otp_email(to_email, otp):
 	from_email = settings.EMAIL_HOST_USER
 	recipient_list = [to_email]
 	send_mail(subject, message, from_email, recipient_list)
+#  send_otp_email.delay("s.orlov11012@gmail.com", 554433)

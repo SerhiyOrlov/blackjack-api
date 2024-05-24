@@ -7,7 +7,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-
 from .models import User
 from .renderers import UserJSONRenderer
 from .tasks import send_otp_email
@@ -34,10 +33,10 @@ class RegistrationAPIView(APIView):
 			                status=status.HTTP_503_SERVICE_UNAVAILABLE)
 		print(serializer.data.get("email"), serializer.data.get('confirmation_otp'))
 		try:
-
 			send_otp_email.delay(serializer.data.get("email"), serializer.data.get('confirmation_otp'))
 		except Exception as e:
-			print(e)
+			return Response("Error sending confirmation email try again later",
+			                status=status.HTTP_503_SERVICE_UNAVAILABLE)
 		# serializer.save()
 		return Response(data="OTP sent", status=status.HTTP_201_CREATED)
 

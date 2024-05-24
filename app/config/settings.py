@@ -102,7 +102,7 @@ CELERY_TIMEZONE = "UTC"
 
 OTP_EXPIRATION_IN_MINUTES = os.environ.get("OTP_EXPIRATION_IN_MINUTES", 5)
 TOTP_GENERATOR = pyotp.TOTP(pyotp.random_base32(),
-                            interval= SECONDS_IN_MINUTE * OTP_EXPIRATION_IN_MINUTES)
+                            interval=SECONDS_IN_MINUTE * OTP_EXPIRATION_IN_MINUTES)
 
 
 # Password validation
