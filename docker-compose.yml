@@ -10,7 +10,9 @@ services:
       context: ./app
       dockerfile: Dockerfile
     command: >
-      sh -c '/wait-for-it.sh postgres:5432 -- python manage.py runserver 0.0.0.0:8000'
+      sh -c "python manage.py wait_for_db && 
+             python manage.py runserver 0.0.0.0:8000"
+
     volumes:
      - ./app:/usr/src/app/
     ports:
