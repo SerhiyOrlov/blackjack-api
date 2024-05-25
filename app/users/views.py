@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied
 
 from .serializers import (
@@ -18,7 +18,7 @@ from .renderers import UserJSONRenderer
 
 class UserBalanceView(generics.RetrieveUpdateAPIView):
 	"""
-	A view to get and update the balance of a user
+	An endpoint for getting or updating the balance of a user.
 	"""
 	permission_classes = (IsAuthenticated,)
 	serializer_class = UserSerializer
@@ -48,7 +48,7 @@ class UserBalanceView(generics.RetrieveUpdateAPIView):
 
 class UserRetriveUpdateView(generics.RetrieveUpdateAPIView):
 	"""
-	A view to get and update info about user
+	An endpoint for getting a specific user and updating their information.
 	"""
 	permission_classes = (IsAuthenticated,)
 	renderer_classes = (UserJSONRenderer,)
@@ -75,7 +75,7 @@ class UserRetriveUpdateView(generics.RetrieveUpdateAPIView):
 
 class UserConfirmOTPView(generics.GenericAPIView):
 	"""
-	A view for one time password confirmation
+	An endpoint for the one-time password confirmation
 	"""
 	serializer_class = OTPSerializer
 

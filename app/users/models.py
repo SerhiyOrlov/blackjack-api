@@ -20,7 +20,7 @@ class UserManager(BaseUserManager):
 	Needed for managing User objects.
 	"""
 
-	def create_user(self, username, email, password=None):
+	def create_user(self, username, email, password=None, confirmation_otp=None,):
 		"""Creating a usual user without additonal permissions."""
 		if username is None:
 			raise TypeError('Users must have a username.')
@@ -28,7 +28,7 @@ class UserManager(BaseUserManager):
 		if email is None:
 			raise TypeError('Users must have an email address.')
 
-		user = self.model(username=username, email=self.normalize_email(email))
+		user = self.model(username=username, email=self.normalize_email(email), confirmation_otp=confirmation_otp)
 		user.set_password(password)  # A default Django method to set normalized and hashed password to the user
 		user.save()
 

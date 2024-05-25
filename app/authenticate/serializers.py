@@ -14,7 +14,8 @@ class RegistrationSerializer(serializers.ModelSerializer):
 	token = serializers.CharField(min_length=255, read_only=True)
 	confirmation_otp = serializers.SerializerMethodField('get_confirmation_otp')
 
-	def get_confirmation_otp(self, func):
+
+	def get_confirmation_otp(self, obj):
 		return settings.TOTP_GENERATOR.now()
 
 	class Meta:
@@ -23,6 +24,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 	def create(self, validated_data):
 		return User.objects.create_user(**validated_data)
+
+	def validate(self, data):
+		# include the additional field in the validated data
+		data['confirmation_otp'] = self.get_confirmation_otp(self.instance)
+		return super().validate(data)
 
 
 class LoginSerializer(serializers.Serializer):
