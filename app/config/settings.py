@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'rest_framework',
 
+    'users',
     'authenticate',
     'core',
 ]
@@ -148,7 +149,7 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'authenticate.User'
+AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'config.exceptions.core_exception_handler',
