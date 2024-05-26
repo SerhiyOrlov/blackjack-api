@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from django.forms.models import model_to_dict
 
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.exceptions import PermissionDenied
 
 from .serializers import (
@@ -20,30 +21,29 @@ class UserBalanceView(generics.RetrieveUpdateAPIView):
 	"""
 	An endpoint for getting or updating the balance of a user.
 	"""
-	permission_classes = (IsAuthenticated,)
+	permission_classes = (IsAdminUser,)
 	serializer_class = UserSerializer
 
 	def retrieve(self, request, *args, **kwargs):
-		serializer = self.serializer_class(request.user)
-		return Response({"balance": serializer.data.get('balance')}, status=status.HTTP_200_OK)
+		user = get_object_or_404(User, username=request.data.get("username"))
+		return Response({"balance": user.get_balance()}, status=status.HTTP_200_OK)
 
 	def update(self, request, *args, **kwargs):
-		serializer_data = request.data.get('user', {})
+		user = get_object_or_404(User, username=request.data.get("username"))
+		user_data = model_to_dict(user)
+		serializer = self.serializer_class(user, data=user_data, partial=True)
+
+		serializer.is_valid(raise_exception=True)
+
 		params = request.query_params
 		if params:
+			balance = serializer.validated_data.get('balance')
 			new_balance = params.get('balance', None)
-			if new_balance is not None:
-				serializer_data['balance'] = new_balance
-
-		serializer = self.serializer_class(
-			request.user,
-			data=serializer_data,
-			partial=True
-		)
-		serializer.is_valid(raise_exception=True)
+			if new_balance is not None and new_balance != balance:
+				serializer.validated_data['balance'] = new_balance
 		serializer.save()
 
-		return Response(serializer.data, status=status.HTTP_200_OK)
+		return Response({"user": 0}, status=status.HTTP_200_OK)
 
 
 class UserRetriveUpdateView(generics.RetrieveUpdateAPIView):

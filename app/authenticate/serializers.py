@@ -14,7 +14,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
 	token = serializers.CharField(min_length=255, read_only=True)
 	confirmation_otp = serializers.SerializerMethodField('get_confirmation_otp')
 
-
 	def get_confirmation_otp(self, obj):
 		return settings.TOTP_GENERATOR.now()
 
