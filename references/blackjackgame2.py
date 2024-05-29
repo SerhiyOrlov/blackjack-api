@@ -10,7 +10,7 @@ class BlackJack:
     values = ('ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king')
 
     def __init__(self):
-        test_version = False
+        test_version = True
 
         ask_number_of_players = False
         ask_names = False
@@ -176,7 +176,8 @@ class BlackJack:
 
     def offer_insurance(self, iteration=0):
         dealer_face_up_card = len(self.deck) - 2
-
+        print(self.value_list)
+        print(dealer_face_up_card)
         if self.value_list[dealer_face_up_card] == 1 or self.value_list[dealer_face_up_card] == 10:
             print('| | Insurance')
             print('| | ------------')
@@ -260,9 +261,15 @@ class BlackJack:
             self.draw_card(i % (self.number_of_players + 1))
 
     def calculate_initial_points(self):
-        for i in range(0, len(self.deck)):
-            player_number = self.turn_order[i]
-            card_value = self.value_list[i]
+        print(self.turn_order)
+        for i in range(len(self.deck)):
+
+            try:
+                player_number = self.turn_order[i]
+                card_value = self.value_list[i]
+            except IndexError as e:
+                print(e)
+                return
             self.points_list[player_number] += card_value
 
             if card_value == 1:
@@ -273,7 +280,7 @@ class BlackJack:
                 self.points_list[player_number] -= 10
                 self.ace_count[player_number] -= 1
 
-    def ask_number_of_players(self):
+    def     ask_number_of_players(self):
         answer = input('| | How many players?\n| | ')
         try:
             self.number_of_players = int(answer)
@@ -312,16 +319,18 @@ class BlackJack:
         return value + ' of ' + suit
 
     def draw_card(self, player_number):
-        if not self.deck:
-            print("| | The deck is empty. Reshuffling...")
-            self.deck = self.create_deck()
-            self.shuffle_deck()
+        # if not self.deck:
+        #     print("| | The deck is empty. Reshuffling...")
+        #     self.deck = self.create_deck()
+        #     self.shuffle_deck()
         card = self.deck.pop()
         self.turn_order.append(player_number)
+        print(card)
         self.value_list.append(card[1] + 1 if card[1] < 10 else 10)
 
     def shuffle_deck(self):
         np.random.shuffle(self.deck)
+
 
     def clear_table(self):
         self.deck = self.create_deck()
