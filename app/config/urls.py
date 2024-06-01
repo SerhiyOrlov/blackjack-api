@@ -16,8 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include(('authenticate.urls', 'authenticate'), namespace='authenticate')),
     path('api/user/', include(('users.urls', 'users'), namespace='users')),
+    path('api/game/', include(('blackjack.urls', 'blackjack'), namespace='blackjack'))
 ]
