@@ -1,10 +1,6 @@
 """Mixin - A Addtional class to expand base class functionality"""
-
-import jwt
-
-from datetime import datetime, timedelta
 from django.utils.translation import gettext as _
-from django.conf import settings  # Importing Django settings
+
 from django.contrib.auth.models import (
 	AbstractBaseUser,
 	BaseUserManager,
@@ -12,6 +8,8 @@ from django.contrib.auth.models import (
 )
 
 from django.db import models
+
+from authenticate.utils import AuthManager
 
 
 class UserManager(BaseUserManager):
@@ -69,7 +67,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 	@property
 	def token(self):
 		"""Function with property decorator allows to add an edditional atribute to the class"""
-		return self._generate_jwt_token()
+		return AuthManager.generate_token(user_id=self.pk)
 
 	def get_full_name(self):
 		return self.username
@@ -83,17 +81,3 @@ class User(AbstractBaseUser, PermissionsMixin):
 	def append_balance(self, value):
 		self.balance += value
 		return self.balance
-
-	def _generate_jwt_token(self):
-		"""
-		Generating jwt token.
-		Payload : id: User.pk, exp: Datetime obj(Now + 1 day)
-		"""
-		dt = datetime.now() + timedelta(days=1)
-
-		token = jwt.encode({
-			'id': self.pk,
-			'exp': int(dt.strftime('%s'))
-		}, settings.SECRET_KEY, algorithm='HS256')
-
-		return token
